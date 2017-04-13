@@ -1,6 +1,8 @@
 package com.example.zouxu_zhang_103703431.dailyapp;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Address;
@@ -42,6 +44,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
+import static android.R.attr.key;
+import static android.R.attr.start;
+import static android.R.attr.value;
 import static android.content.ContentValues.TAG;
 import static android.os.SystemClock.sleep;
 import static java.lang.Math.round;
@@ -83,18 +88,19 @@ public class MainActivity extends Activity implements
     List<Double> rain_possiblitys= new ArrayList<>();
     List<String> weather_forecast_date = new ArrayList<>();
     List<String> weather_forecast_time = new ArrayList<>();
+    public Context context_main = MainActivity.this.getBaseContext();
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.weather);
         // responseText = (TextView) findViewById(R.id.response_text);
         // sendRequestWithHttpURLConnection();
         //openGPSSettings();
         //getLocation();
 
-        tv1 = (TextView) this.findViewById(R.id.response_text);
+        //tv1 = (TextView) this.findViewById(R.id.response_text);
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             permissionList.add(Manifest.permission.ACCESS_FINE_LOCATION);
@@ -207,7 +213,7 @@ public class MainActivity extends Activity implements
 
     @Override
     public void onLocationChanged(Location location) {
-        tv1.setText("Location received: " + location.toString());
+       // tv1.setText("Location received: " + location.toString());
     }
 
 
@@ -248,11 +254,11 @@ public class MainActivity extends Activity implements
                 testoutput += ("\nlon=" + coordinate_Obj.get("lon").getAsInt());
             }*/
                 } catch (IOException ex) {
-                    testoutput += "12342352345\n";
+                   // testoutput += "12342352345\n";
                     ex.printStackTrace();
 
                 } catch (JSONException e) {
-                    testoutput += "88888888888\n";
+                   // testoutput += "88888888888\n";
                     e.printStackTrace();
                 }
 
@@ -289,7 +295,7 @@ public class MainActivity extends Activity implements
 
 
                                 if (mLastLocation != null) {
-                                    tv1.setText("1");
+                                   // tv1.setText("1");
                                     testoutput += String.valueOf(mLastLocation.getLatitude()) + "\n" + String.valueOf(mLastLocation.getLongitude());
 
                                     Geocoder geocoder = new Geocoder(MainActivity.this, Locale.getDefault());
@@ -301,9 +307,9 @@ public class MainActivity extends Activity implements
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
-                                    String countryName = addresses.get(0).getAddressLine(2);
-                                    String cityName = addresses.get(0).getLocality();
-                                    String stateName = addresses.get(0).getAdminArea();
+                                    countryName = addresses.get(0).getAddressLine(2);
+                                    cityName = addresses.get(0).getLocality();
+                                    stateName = addresses.get(0).getAdminArea();
 
                                     FindCityID(cityName, countryName,MyLat,MyLon);
 
@@ -314,7 +320,7 @@ public class MainActivity extends Activity implements
 
                                 }
                                 else{
-                                    tv1.setText("2");
+                                   // tv1.setText("2");
                                 }
 
 /*
@@ -365,12 +371,33 @@ public class MainActivity extends Activity implements
 
 
 
-                                write_Data_ToFile();
+                             /*   write_Data_ToFile();
                                 readFromFile();
                                 get_weather_fore_cast();
-                                get_temp_MinandMax();
+                                get_temp_MinandMax();*/
 
-                                tv1.setText(testoutput);
+                             /*   List<Double> temps= new ArrayList<>();
+                                List<Double> temp_mins= new ArrayList<>();
+                                List<Double> temp_maxs= new ArrayList<>();
+                                List<Double> temp_min_of_next_five_days= new ArrayList<>();
+                                List<Double> temp_max_of_next_five_days= new ArrayList<>();
+                                List<String> main_weathers = new ArrayList<>();
+                                List<String> weather_descriptions = new ArrayList<>();
+                                List<Integer> wind_degrees = new ArrayList<>();
+                                List<Integer> wind_speeds = new ArrayList<>();
+                                List<Integer> clouds = new ArrayList<>();
+                                List<Double> rain_possiblitys= new ArrayList<>();
+                                List<String> weather_forecast_date = new ArrayList<>();
+                                List<String> weather_forecast_time = new ArrayList<>();*/
+
+                                Intent intent = new Intent(MainActivity.this, Weather.class);
+                                intent.putExtra("id_of_gps",id_of_gps);
+                                intent.putExtra("city_Name",cityName);
+                                intent.putExtra("state_Name",stateName);
+                                intent.putExtra("country_Name",countryName);
+                                startActivity(intent);
+
+                               // tv1.setText(testoutput);
 
                             }
 
@@ -444,225 +471,7 @@ public class MainActivity extends Activity implements
 
     }
 
-    private void readFromFile() {
-        runOnUiThread(new Runnable(){
-            @Override
-            public void run() {
 
-
-                try {
-                    String baseFolder = MainActivity.this.getBaseContext().getExternalFilesDir(null).getAbsolutePath();
-                    File file = new File(baseFolder + "/weather_forecast.json");
-                    InputStream inputStream = new FileInputStream(file);
-
-                    if ( inputStream != null ) {
-                        InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-                        BufferedReader reader = new BufferedReader(inputStreamReader);
-                        String receiveString = "";
-                        String string_of_line_weather = "";
-
-                        while ( (receiveString = reader.readLine()) != null ) {
-                            string_of_line_weather+= receiveString;
-                        }
-                        weather_forecast_data_String = string_of_line_weather;
-
-                    }
-                    else{
-
-                    }
-                    inputStream.close();
-                }
-                catch (FileNotFoundException e) {
-                    Log.e("login activity", "File not found: " + e.toString());
-                } catch (IOException e) {
-                    Log.e("login activity", "Can not read file: " + e.toString());
-                }
-
-            }
-
-        });
-
-    }
-
-
-    private void write_Data_ToFile() {
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                String baseFolder,data = "";
-                HttpURLConnection connection = null;
-                BufferedReader reader = null;
-                try{
-                    baseFolder = MainActivity.this.getBaseContext().getExternalFilesDir(null).getAbsolutePath();
-                    File file = new File(baseFolder + "/weather_forecast.json");
-                    if(file.exists()==true){
-                        URL weather_URL= new URL("http://api.openweathermap.org/data/2.5/forecast?id=" + id_of_gps + "&APPID=942a438dfad8aa4a25a5618ca61c36dd");
-                        connection = (HttpURLConnection)weather_URL.openConnection();
-                        connection.setConnectTimeout(6666);
-                        connection.setReadTimeout(6666);
-                        InputStream inputstream = connection.getInputStream();
-                        reader = new BufferedReader(new InputStreamReader(inputstream));
-                        StringBuilder respoonse_string = new StringBuilder();
-                        String respones_text;
-                        while ((respones_text = reader.readLine())!=null){
-                            data += (respones_text);
-                        }
-
-                        FileOutputStream fos = new FileOutputStream(file);
-                        fos.write(data.getBytes());
-                        fos.close();
-                    }else{
-                       URL weather_URL= new URL("http://api.openweathermap.org/data/2.5/forecast?id=" + id_of_gps + "&APPID=942a438dfad8aa4a25a5618ca61c36dd");
-                        connection = (HttpURLConnection)weather_URL.openConnection();
-                        connection.setConnectTimeout(6666);
-                        connection.setReadTimeout(6666);
-                        InputStream inputstream = connection.getInputStream();
-                        reader = new BufferedReader(new InputStreamReader(inputstream));
-                        StringBuilder respoonse_string = new StringBuilder();
-                        String respones_text;
-                        while ((respones_text = reader.readLine())!=null){
-                            data += (respones_text);
-                        }
-                        FileOutputStream fos = new FileOutputStream(file);
-                        fos.write(data.getBytes());
-                        fos.close();
-                    }
-
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                finally{
-                    if(reader!=null){
-                        try{
-                            reader.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    if(connection!=null){
-                        connection.disconnect();;
-                    }
-                }
-            }
-        }).start();
-
-    }
-    public void get_weather_fore_cast()  {
-        runOnUiThread(new Runnable(){
-
-            @Override
-            public void run() {
-                try {
-                    JSONObject weather_forecast_obg = new JSONObject(weather_forecast_data_String);
-                    JSONArray list_weather_Array = weather_forecast_obg.getJSONArray("list");
-                    for (int i = 0; i < list_weather_Array.length(); i++) {
-                        JSONObject weather_inf = list_weather_Array.getJSONObject(i);
-                        JSONObject temp_inf = weather_inf.getJSONObject("main");
-                        JSONArray weather_Array = weather_inf.getJSONArray("weather");
-                        JSONObject sub_weather_inf = weather_Array.getJSONObject(0);
-                        JSONObject cloud_inf= weather_inf.getJSONObject("clouds");
-                        JSONObject wind_inf= weather_inf.getJSONObject("wind");
-                        JSONObject rain_inf= weather_inf.getJSONObject("rain");
-
-
-                        String dt_String = weather_inf.getString("dt_txt");
-
-                        DecimalFormat df = new DecimalFormat("#.###");
-                        df.setRoundingMode(RoundingMode.FLOOR);
-                        double rain_possiblity;
-                        if(rain_inf.has("3h")){
-                            rain_possiblity = rain_inf.getDouble("3h");
-                        }
-                        else{
-                            rain_possiblity = 0;
-
-                        }
-
-                        int wind_speed = wind_inf.getInt("speed");
-                        int wind_degree = wind_inf.getInt("deg");
-                        int cloud = cloud_inf.getInt("all");
-                        String main_weather = sub_weather_inf.getString("main");
-                        String weather_description = sub_weather_inf.getString("description");
-                        double temp = temp_inf.getDouble("temp");
-                        double temp_min = temp_inf.getDouble("temp_min");
-                        double temp_max = temp_inf.getDouble("temp_max");
-
-                        rain_possiblity = Double.parseDouble(df.format(rain_possiblity));
-
-                        temps.add(temp);
-                        temp_mins.add(temp_min);
-                        temp_maxs.add(temp_max);
-                        main_weathers.add(main_weather);
-                        weather_descriptions.add(weather_description);
-                        clouds.add(cloud);
-                        wind_degrees.add(wind_degree);
-                        wind_speeds.add(wind_speed);
-                        rain_possiblitys.add(rain_possiblity);
-
-
-                        testoutput += "Weather: " + main_weather + "\n";
-                        testoutput += "Cloud level: " + cloud + "\n";
-                        testoutput += "Wind degree: " + wind_degree + "\n";
-                        testoutput += "Wind speed: " + wind_speed + "\n";
-                        testoutput += "Rain level: " + rain_possiblity + "\n";
-
-                        StringTokenizer st = new StringTokenizer(dt_String," ");
-                        for (int knt =0;st.hasMoreTokens();knt++) {
-                            if(knt==0){
-                                weather_forecast_date.add(st.nextToken());
-                            }
-                            if(knt==1){
-                                weather_forecast_time.add(st.nextToken());
-                            }
-                        }
-
-                    }
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        });
-    }
-
-
-    public void get_temp_MinandMax()  {
-        runOnUiThread(new Runnable(){
-
-            @Override
-            public void run() {
-                sleep(1000);
-                double compare_Min,compare_Max;
-                compare_Min=temp_mins.get(0);
-                compare_Max=temp_maxs.get(0);
-                for (int j = 1; j <= 5; j++) {
-                    compare_Min=temp_mins.get(0+(j-1)*8);
-                    compare_Max=temp_maxs.get(0+(j-1)*8);
-                    for (int i = 1; i <= 8; i++) {
-                        if((i*j-1)<temp_mins.size()){
-                            if(temp_mins.get(i*j-1)<compare_Min){
-                                compare_Min=temp_mins.get(i*j-1);
-                            }
-                            if(temp_maxs.get(i*j-1)>compare_Max){
-                                compare_Max=temp_maxs.get(i*j-1);
-                            }
-                        }
-
-                    }
-                    DecimalFormat df = new DecimalFormat("#.###");
-                    df.setRoundingMode(RoundingMode.FLOOR);
-                    temp_min_of_next_five_days.add(compare_Min);
-                    temp_max_of_next_five_days.add(compare_Max);
-                    testoutput += "tmep_min_of_days: " + df.format(temp_min_of_next_five_days.get(j-1)-273.15) + "\n";
-                    testoutput += "tmep_max_of_days: " + df.format(temp_max_of_next_five_days.get(j-1)-273.15) + "\n";
-                }
-            }
-        });
-    }
 
 
 }
